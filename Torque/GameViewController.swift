@@ -28,6 +28,7 @@ class GameViewController: UIViewController {
         /* Set the scale mode to scale to fit the window */
         scene.scaleMode = .AspectFill
         scene.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        scene.physicsWorld.contactDelegate = scene
             
         skView.presentScene(scene)
     }
