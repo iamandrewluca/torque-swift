@@ -15,139 +15,146 @@ enum Objects: UInt32 {
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
 
+    var isPressed: Bool = false
+    var contacted: Bool = false
     var pinJoint: SKPhysicsJointPin?
+    var end: SKSpriteNode?
+    var begin: SKSpriteNode?
+    var dot:SKSpriteNode?
 
     override func didMoveToView(view: SKView) {
 
-        let circleRadius: CGFloat = 5
+        let bigCircleRadius: CGFloat = 10
+        let smallCircleRadius: CGFloat = 5
+        let distanceBetweenCircles: CGFloat = 50
 
-        let circleShape: SKShapeNode = SKShapeNode(circleOfRadius: circleRadius)
+        let circleShape: SKShapeNode = SKShapeNode(circleOfRadius: bigCircleRadius * UIScreen.mainScreen().scale)
         circleShape.fillColor = SKColor.whiteColor()
 
         let circleTexture: SKTexture = self.view!.textureFromNode(circleShape)!
 
-        let middleDot: SKSpriteNode = SKSpriteNode(texture: circleTexture)
-//        middleDot.position.y = 100
-        middleDot.physicsBody = SKPhysicsBody(circleOfRadius: circleRadius)
-        middleDot.physicsBody?.dynamic = false
-        middleDot.physicsBody?.affectedByGravity = false
-        middleDot.physicsBody?.collisionBitMask = 0
-        middleDot.physicsBody?.categoryBitMask = 0
-        middleDot.physicsBody?.contactTestBitMask = 0
+        let firstDot: SKSpriteNode = SKSpriteNode(texture: circleTexture, size: CGSize(width: bigCircleRadius * 2, height: bigCircleRadius * 2))
 
-        self.addChild(middleDot)
+        firstDot.position = CGPoint(x: self.frame.size.width / 2 - distanceBetweenCircles / 2, y: self.frame.size.height / 2)
+        firstDot.zPosition = 0
+        self.addChild(firstDot)
 
-        let distanceBetweenCircles: CGFloat = 40
+        firstDot.physicsBody = SKPhysicsBody(circleOfRadius: bigCircleRadius)
+        firstDot.physicsBody?.dynamic = false
+        firstDot.physicsBody?.affectedByGravity = false
+        firstDot.physicsBody?.collisionBitMask = 0
+        firstDot.physicsBody?.categoryBitMask = Objects.Dot.rawValue
+        firstDot.physicsBody?.contactTestBitMask = Objects.Stick.rawValue
 
-        var coordinatesMatrix: [[CGPoint]] = Array(count: 5,
-            repeatedValue: Array(count: 5, repeatedValue: CGPoint.zero))
+        let secondDot: SKSpriteNode = SKSpriteNode(texture: circleTexture, size: CGSize(width: bigCircleRadius * 2, height: bigCircleRadius * 2))
 
-        for i in 1..<3 {
+        secondDot.position = CGPoint(x: self.frame.size.width / 2 + distanceBetweenCircles / 2, y: self.frame.size.height / 2)
+        secondDot.zPosition = 0
+        self.addChild(secondDot)
 
-            coordinatesMatrix[2][2 + i].x = coordinatesMatrix[2][2 + i - 1].x + distanceBetweenCircles * cos(0)
-            coordinatesMatrix[2][2 + i].y = coordinatesMatrix[2][2 + i - 1].y
+        secondDot.physicsBody = SKPhysicsBody(circleOfRadius: bigCircleRadius)
+        secondDot.physicsBody?.dynamic = false
+        secondDot.physicsBody?.affectedByGravity = false
+        secondDot.physicsBody?.collisionBitMask = 0
+        secondDot.physicsBody?.categoryBitMask = 0
+        secondDot.physicsBody?.contactTestBitMask = 0
 
-            coordinatesMatrix[2][2 - i].x = coordinatesMatrix[2][2 - i + 1].x + distanceBetweenCircles * cos(CGFloat(M_PI))
-            coordinatesMatrix[2][2 - i].y = coordinatesMatrix[2][2 - i + 1].y
+        let stick: SKSpriteNode = SKSpriteNode(color: SKColor.greenColor(),
+            size: CGSize(width: distanceBetweenCircles, height: smallCircleRadius))
+        stick.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height / 2)
+        stick.zPosition = 1
+        self.addChild(stick)
 
-            coordinatesMatrix[2 - i][2].x = coordinatesMatrix[2 - i + 1][2].x + distanceBetweenCircles * cos(CGFloat(2/3 * M_PI))
-            coordinatesMatrix[2 - i][2].y = coordinatesMatrix[2 - i + 1][2].y + distanceBetweenCircles * sin(CGFloat(2/3 * M_PI))
+        let stickBegin: SKSpriteNode = SKSpriteNode(texture: circleTexture, color: SKColor.greenColor(),
+            size: CGSize(width: smallCircleRadius * 2, height: smallCircleRadius * 2))
+        stickBegin.colorBlendFactor = 1
+        stickBegin.position = stick.position
+        stickBegin.position.x -= stick.size.width / 2
+        stickBegin.zPosition = 2
+        self.addChild(stickBegin)
 
-            coordinatesMatrix[2 + i][2].x = coordinatesMatrix[2 + i - 1][2].x + distanceBetweenCircles * cos(CGFloat(5/3 * M_PI))
-            coordinatesMatrix[2 + i][2].y = coordinatesMatrix[2 + i - 1][2].y + distanceBetweenCircles * sin(CGFloat(5/3 * M_PI))
+        let stickEnd: SKSpriteNode = SKSpriteNode(texture: circleTexture, color: SKColor.greenColor(),
+            size: CGSize(width: smallCircleRadius * 2, height: smallCircleRadius * 2))
+        stickEnd.colorBlendFactor = 1
+        stickEnd.position = stick.position
+        stickEnd.position.x += stick.size.width / 2
+        stickEnd.zPosition = 2
+        self.addChild(stickEnd)
 
-            coordinatesMatrix[2 + i][2 + i].x = coordinatesMatrix[2 + i - 1][2 + i - 1].x + distanceBetweenCircles * cos(CGFloat(4/3 * M_PI))
-            coordinatesMatrix[2 + i][2 + i].y = coordinatesMatrix[2 + i - 1][2 + i - 1].y + distanceBetweenCircles * sin(CGFloat(4/3 * M_PI))
+        stick.physicsBody = SKPhysicsBody(rectangleOfSize: CGSize(width: distanceBetweenCircles, height: smallCircleRadius))
+        stick.physicsBody?.collisionBitMask = 0
+        stick.physicsBody?.categoryBitMask = 0
+        stick.physicsBody?.contactTestBitMask = 0
 
-            coordinatesMatrix[2 - i][2 - i].x = coordinatesMatrix[2 - i + 1][2 - i + 1].x + distanceBetweenCircles * cos(CGFloat(M_PI / 3))
-            coordinatesMatrix[2 - i][2 - i].y = coordinatesMatrix[2 - i + 1][2 - i + 1].y + distanceBetweenCircles * sin(CGFloat(M_PI / 3))
-        }
+        stickBegin.physicsBody = SKPhysicsBody(circleOfRadius: smallCircleRadius)
+        stickBegin.physicsBody?.collisionBitMask = 0
+        stickBegin.physicsBody?.categoryBitMask = Objects.Stick.rawValue
+        stickBegin.physicsBody?.contactTestBitMask = Objects.Dot.rawValue
 
-        for i in 0 ... 4  {
-            for j in 0 ... 4 {
+        stickEnd.physicsBody = SKPhysicsBody(circleOfRadius: smallCircleRadius)
+        stickEnd.physicsBody?.collisionBitMask = 0
+        stickEnd.physicsBody?.categoryBitMask = Objects.Stick.rawValue
+        stickEnd.physicsBody?.contactTestBitMask = Objects.Dot.rawValue
 
-                if coordinatesMatrix[i][j] == CGPoint.zero {
-                    continue
-                }
+        let beginToStickJoint: SKPhysicsJointFixed = SKPhysicsJointFixed.jointWithBodyA(stickBegin.physicsBody!,
+            bodyB: stick.physicsBody!, anchor: stickBegin.position)
 
-                let dot = SKSpriteNode(texture: circleTexture)
-                dot.position = coordinatesMatrix[i][j]
+        self.physicsWorld.addJoint(beginToStickJoint)
 
-                dot.physicsBody = SKPhysicsBody(circleOfRadius: circleRadius)
-                dot.physicsBody?.dynamic = false
-                dot.physicsBody?.affectedByGravity = false
+        let endToStickJoint: SKPhysicsJointFixed = SKPhysicsJointFixed.jointWithBodyA(stickEnd.physicsBody!,
+            bodyB: stick.physicsBody!, anchor: stickEnd.position)
 
-                // dont collide
-                dot.physicsBody?.collisionBitMask = 0
-                // what type of object
-                dot.physicsBody?.categoryBitMask = Objects.Dot.rawValue
-                // trigger collision with
-//                dot.physicsBody?.contactTestBitMask = Objects.Stick.rawValue
+        self.physicsWorld.addJoint(endToStickJoint)
 
-                self.addChild(dot)
-            }
-        }
+        let beginToDotJointPin: SKPhysicsJointPin = SKPhysicsJointPin.jointWithBodyA(firstDot.physicsBody!,
+            bodyB: stickBegin.physicsBody!, anchor: firstDot.position)
 
-        let borderWidth: CGFloat = 3
-        let diffBetweenCircles: CGFloat = 1
-        let endsCirclesRadius: CGFloat = circleRadius + diffBetweenCircles + borderWidth
+        self.physicsWorld.addJoint(beginToDotJointPin)
 
-        let endsCircles: SKShapeNode = SKShapeNode(circleOfRadius: endsCirclesRadius)
-        endsCircles.lineWidth = borderWidth
-        let endsCirclesTexture = self.view?.textureFromNode(endsCircles)
+        pinJoint = beginToDotJointPin
 
-        let stickHeight: CGFloat = distanceBetweenCircles - endsCirclesRadius * 2
-        let middleStick: SKSpriteNode = SKSpriteNode(color: SKColor.whiteColor(), size: CGSize(width: borderWidth, height: stickHeight))
-
-        let end1: SKSpriteNode = SKSpriteNode(texture: endsCirclesTexture)
-        end1.position.y += middleStick.size.height / 2 + endsCirclesRadius
-
-        let end2: SKSpriteNode = SKSpriteNode(texture: endsCirclesTexture)
-        end2.position.y -= middleStick.size.height / 2 + endsCirclesRadius
-
-        self.addChild(middleStick)
-        middleStick.addChild(end1)
-        middleStick.addChild(end2)
-
-        middleStick.position.y -= distanceBetweenCircles / 2
-
-        middleStick.physicsBody = SKPhysicsBody(rectangleOfSize: middleStick.size)
-        middleStick.physicsBody?.collisionBitMask = 0
-        end1.physicsBody = SKPhysicsBody(circleOfRadius: endsCirclesRadius)
-        end1.physicsBody?.collisionBitMask = 0
-        end2.physicsBody = SKPhysicsBody(circleOfRadius: endsCirclesRadius)
-        end2.physicsBody?.collisionBitMask = 0
-
-        end1.physicsBody?.categoryBitMask = Objects.Stick.rawValue
-        end2.physicsBody?.categoryBitMask = Objects.Stick.rawValue
-
-        end1.physicsBody?.contactTestBitMask = Objects.Dot.rawValue
-        end2.physicsBody?.contactTestBitMask = Objects.Dot.rawValue
-
-        let stickFixedJoint1: SKPhysicsJointFixed = SKPhysicsJointFixed.jointWithBodyA(end1.physicsBody!,
-            bodyB: middleStick.physicsBody!, anchor: CGPoint.zero)
-        let stickFixedJoint2: SKPhysicsJointFixed = SKPhysicsJointFixed.jointWithBodyA(middleStick.physicsBody!,
-            bodyB: end2.physicsBody!, anchor: CGPoint.zero)
-
-        let dotEndJointPin: SKPhysicsJointPin = SKPhysicsJointPin.jointWithBodyA(middleDot.physicsBody!,
-            bodyB: end1.physicsBody!, anchor: CGPoint.zero)
-
-        self.physicsWorld.addJoint(stickFixedJoint1)
-        self.physicsWorld.addJoint(stickFixedJoint2)
-
-        self.physicsWorld.addJoint(dotEndJointPin)
-
-        dotEndJointPin.rotationSpeed = -CGFloat(M_PI / 4)
-        dotEndJointPin.frictionTorque = 1.0
-
-        pinJoint = dotEndJointPin
+        begin = stickBegin
+        end = stickEnd
+        dot = secondDot
     }
 
     func didBeginContact(contact: SKPhysicsContact) {
-
+        debugPrint("begin contact")
+        contacted = true
     }
 
     func didEndContact(contact: SKPhysicsContact) {
-//        debugPrint("end contact")
+        debugPrint("end contact")
+        contacted = false
+    }
+
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        isPressed = true
+        dot?.physicsBody?.categoryBitMask = Objects.Dot.rawValue
+        dot?.physicsBody?.contactTestBitMask = Objects.Stick.rawValue
+    }
+
+    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        isPressed = false
+    }
+
+    override func update(currentTime: NSTimeInterval) {
+        if (isPressed) {
+            debugPrint("update", currentTime)
+            end?.physicsBody?.applyTorque(0.022)
+        }
+    }
+
+    override func didSimulatePhysics() {
+        if (contacted) {
+            if (abs(end!.position.x - dot!.position.x) < 3 &&
+                abs(end!.position.y - dot!.position.y) < 3) {
+                end!.position = dot!.position
+                let endToDotJointPin: SKPhysicsJointPin = SKPhysicsJointPin.jointWithBodyA(dot!.physicsBody!,
+                    bodyB: end!.physicsBody!, anchor: dot!.position)
+                
+                self.physicsWorld.addJoint(endToDotJointPin)
+            }
+        }
     }
 }
