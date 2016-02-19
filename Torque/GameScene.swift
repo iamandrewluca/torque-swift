@@ -43,6 +43,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         firstDot.physicsBody = SKPhysicsBody(circleOfRadius: bigCircleRadius)
         firstDot.physicsBody?.dynamic = false
         firstDot.physicsBody?.affectedByGravity = false
+        firstDot.physicsBody?.allowsRotation = false
         firstDot.physicsBody?.collisionBitMask = 0
         firstDot.physicsBody?.categoryBitMask = Objects.Dot.rawValue
         firstDot.physicsBody?.contactTestBitMask = Objects.Stick.rawValue
@@ -56,6 +57,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         secondDot.physicsBody = SKPhysicsBody(circleOfRadius: bigCircleRadius)
         secondDot.physicsBody?.dynamic = false
         secondDot.physicsBody?.affectedByGravity = false
+        secondDot.physicsBody?.allowsRotation = false
         secondDot.physicsBody?.collisionBitMask = 0
         secondDot.physicsBody?.categoryBitMask = Objects.Dot.rawValue
         secondDot.physicsBody?.contactTestBitMask = Objects.Stick.rawValue
@@ -123,6 +125,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         begin = stickBegin
         end = stickEnd
         currentDot = firstDot
+
+
+        end?.physicsBody?.applyImpulse(CGVector(dx: 1, dy: 0))
     }
 
     func didBeginContact(contact: SKPhysicsContact) {
@@ -154,8 +159,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
     override func didSimulatePhysics() {
         if (contacted) {
-            if (abs(end!.position.x - contactedDot!.position.x) < bigCircleRadius / 2 &&
-                abs(end!.position.y - contactedDot!.position.y) <  bigCircleRadius / 2) {
+            if (true) {
 
                 end!.position = contactedDot!.position
                 let endToDotJointPin: SKPhysicsJointPin = SKPhysicsJointPin.jointWithBodyA(contactedDot!.physicsBody!,
