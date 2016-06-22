@@ -122,6 +122,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         pinJoint = beginToDotJointPin
 
+
+        // iaca asa se scrie cod like a bossss )))
+
+        pinJoint = beginToDotJointPin
+
+
+        // cu speteefecte nanan )))dsad
+
+
+
+
+
+
+
+
         begin = stickBegin
         end = stickEnd
         currentDot = firstDot
